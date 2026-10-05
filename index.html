@@ -1,0 +1,538 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>我的網頁程式作品集 | Macaron Snow World</title>
+    <!-- Google Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;600;700&family=Noto+Sans+TC:wght@400;500;700&display=swap" rel="stylesheet">
+    
+    <style>
+        /* ==========================================
+           1. 全局與變數設定 (馬卡龍藍色系)
+           ========================================== */
+        :root {
+            --bg-grad-1: #e0f2fe;     /* 馬卡龍淺雪藍 */
+            --bg-grad-2: #bae6fd;     /* 馬卡龍冰藍 */
+            --bg-grad-3: #7dd3fc;     /* 馬卡龍天空藍 */
+            
+            --card-active-bg: rgba(255, 255, 255, 0.75);
+            --card-locked-bg: rgba(226, 232, 240, 0.45);
+            
+            --text-main: #0c4a6e;      /* 深藍文字 */
+            --text-sub: #0284c7;       /* 亮藍副標題 */
+            --text-locked: #94a3b8;    /* 灰色鎖定文字 */
+            
+            --primary-blue: #38bdf8;   /* 主色調藍 */
+            --accent-glow: #00f2fe;    /* 亮藍螢光 */
+            
+            --shadow-soft: 0 10px 30px -5px rgba(56, 189, 248, 0.3);
+            --shadow-hover: 0 20px 35px -5px rgba(14, 165, 233, 0.45);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        body {
+            font-family: 'Fredoka', 'Noto Sans TC', sans-serif;
+            min-height: 100vh;
+            background: linear-gradient(135deg, var(--bg-grad-1) 0%, var(--bg-grad-2) 50%, var(--bg-grad-3) 100%);
+            background-attachment: fixed;
+            color: var(--text-main);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* ==========================================
+           2. 背景雪花飄落動畫 (純 CSS)
+           ========================================== */
+        .snow-wrapper {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 0;
+            overflow: hidden;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -20px;
+            color: #ffffff;
+            font-size: 1rem;
+            user-select: none;
+            animation-name: fall, shake;
+            animation-duration: 10s, 3s;
+            animation-timing-function: linear, ease-in-out;
+            animation-iteration-count: infinite, infinite;
+            opacity: 0.8;
+            filter: drop-shadow(0 0 5px rgba(255,255,255,0.8));
+        }
+
+        @keyframes fall {
+            0% { top: -10%; }
+            100% { top: 105%; }
+        }
+
+        @keyframes shake {
+            0%, 100% { transform: translateX(0); }
+            50% { transform: translateX(50px); }
+        }
+
+        /* 產生多個不同速度與位置的雪花 */
+        .snowflake:nth-child(1) { left: 5%;  animation-duration: 8s, 2.5s; animation-delay: 0s; font-size: 1.2rem; }
+        .snowflake:nth-child(2) { left: 15%; animation-duration: 12s, 3.5s; animation-delay: 1s; font-size: 0.8rem; }
+        .snowflake:nth-child(3) { left: 25%; animation-duration: 9s, 2s; animation-delay: 2s; font-size: 1.5rem; }
+        .snowflake:nth-child(4) { left: 35%; animation-duration: 11s, 4s; animation-delay: 0.5s; font-size: 1rem; }
+        .snowflake:nth-child(5) { left: 45%; animation-duration: 7s, 2.8s; animation-delay: 3s; font-size: 1.3rem; }
+        .snowflake:nth-child(6) { left: 55%; animation-duration: 10s, 3s; animation-delay: 1.5s; font-size: 0.9rem; }
+        .snowflake:nth-child(7) { left: 65%; animation-duration: 13s, 4.2s; animation-delay: 2.5s; font-size: 1.4rem; }
+        .snowflake:nth-child(8) { left: 75%; animation-duration: 8.5s, 2.2s; animation-delay: 0.8s; font-size: 1.1rem; }
+        .snowflake:nth-child(9) { left: 85%; animation-duration: 11.5s, 3.8s; animation-delay: 1.8s; font-size: 0.8rem; }
+        .snowflake:nth-child(10){ left: 95%; animation-duration: 9.5s, 3.1s; animation-delay: 2.2s; font-size: 1.6rem; }
+
+        /* ==========================================
+           3. 主容器與中央大頭貼個人區塊
+           ========================================== */
+        .container {
+            max-width: 1100px;
+            width: 100%;
+            z-index: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+
+        .profile-card {
+            text-align: center;
+            margin-bottom: 40px;
+            background: rgba(255, 255, 255, 0.4);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            padding: 30px 40px;
+            border-radius: 30px;
+            border: 2px solid rgba(255, 255, 255, 0.8);
+            box-shadow: var(--shadow-soft);
+            animation: float 4s ease-in-out infinite;
+        }
+
+        @keyframes float {
+            0%, 100% { transform: translateY(0px); }
+            50% { transform: translateY(-8px); }
+        }
+
+        .avatar-wrapper {
+            position: relative;
+            width: 130px;
+            height: 130px;
+            margin: 0 auto 15px;
+        }
+
+        .avatar {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            box-shadow: 0 8px 20px rgba(14, 165, 233, 0.25);
+        }
+
+        .avatar-decoration {
+            position: absolute;
+            top: -8px;
+            right: -5px;
+            font-size: 2rem;
+            animation: spin 8s linear infinite;
+        }
+
+        @keyframes spin {
+            100% { transform: rotate(360deg); }
+        }
+
+        .profile-card h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            color: var(--text-main);
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+
+        .profile-card p {
+            font-size: 0.95rem;
+            color: var(--text-sub);
+            font-weight: 500;
+            background: rgba(255, 255, 255, 0.6);
+            padding: 4px 16px;
+            border-radius: 20px;
+            display: inline-block;
+        }
+
+        /* ==========================================
+           4. 16 個關卡按鈕網格 Layout
+           ========================================== */
+        .portfolio-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 20px;
+            width: 100%;
+        }
+
+        /* ==========================================
+           5. 按鈕卡片基本樣式 & Hover 動畫效果
+           ========================================== */
+        .card {
+            position: relative;
+            text-decoration: none;
+            height: 120px;
+            border-radius: 20px;
+            padding: 18px;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            transition: all 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+            overflow: hidden;
+            border: 2px solid rgba(255, 255, 255, 0.6);
+        }
+
+        /* --- 解鎖狀態按鈕 --- */
+        .card.unlocked {
+            background: var(--card-active-bg);
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+            box-shadow: 0 8px 20px rgba(186, 230, 253, 0.5);
+            cursor: pointer;
+        }
+
+        /* 酷炫 Hover 動畫：向上浮起 + 邊框發光 + 縮放 */
+        .card.unlocked:hover {
+            transform: translateY(-8px) scale(1.03);
+            background: rgba(255, 255, 255, 0.95);
+            border-color: var(--primary-blue);
+            box-shadow: var(--shadow-hover), 0 0 15px rgba(56, 189, 248, 0.4);
+        }
+
+        /* 閃光光芒掃過效果 */
+        .card.unlocked::before {
+            content: '';
+            position: absolute;
+            top: -50%;
+            left: -50%;
+            width: 200%;
+            height: 200%;
+            background: linear-gradient(
+                45deg,
+                transparent 30%,
+                rgba(255, 255, 255, 0.8) 50%,
+                transparent 70%
+            );
+            transform: rotate(30deg) translateY(-100%);
+            transition: transform 0.8s ease;
+        }
+
+        .card.unlocked:hover::before {
+            transform: rotate(30deg) translateY(100%);
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .badge {
+            font-size: 0.75rem;
+            font-weight: 700;
+            padding: 3px 10px;
+            border-radius: 12px;
+            text-transform: uppercase;
+        }
+
+        .card.unlocked .badge {
+            background-color: var(--bg-grad-3);
+            color: #ffffff;
+        }
+
+        .card-title {
+            font-size: 1.05rem;
+            font-weight: 700;
+            color: var(--text-main);
+            line-height: 1.3;
+            z-index: 1;
+        }
+
+        .card-icon {
+            font-size: 1.4rem;
+        }
+
+        /* --- 未解鎖灰色狀態按鈕 --- */
+        .card.locked {
+            background: var(--card-locked-bg);
+            backdrop-filter: blur(4px);
+            border: 2px dashed rgba(148, 163, 184, 0.4);
+            cursor: not-allowed;
+            opacity: 0.75;
+        }
+
+        .card.locked .badge {
+            background-color: #cbd5e1;
+            color: #64748b;
+        }
+
+        .card.locked .card-title {
+            color: var(--text-locked);
+        }
+
+        /* 鎖定狀態的 Hover 酷炫震動提示效果 */
+        .card.locked:hover {
+            transform: translateY(-2px);
+            background: rgba(241, 245, 249, 0.8);
+            border-color: #94a3b8;
+            animation: shake-lock 0.4s ease-in-out;
+        }
+
+        @keyframes shake-lock {
+            0%, 100% { transform: translateX(0) translateY(-2px); }
+            20% { transform: translateX(-4px) translateY(-2px); }
+            40% { transform: translateX(4px) translateY(-2px); }
+            60% { transform: translateX(-3px) translateY(-2px); }
+            80% { transform: translateX(3px) translateY(-2px); }
+        }
+
+        /* ==========================================
+           6. 響應式 RWD 佈局設定 (手機版適應)
+           ========================================== */
+        /* 平板尺寸 ( 1024px 以下 轉為 3 欄 ) */
+        @media (max-width: 1024px) {
+            .portfolio-grid {
+                grid-template-columns: repeat(3, 1fr);
+            }
+        }
+
+        /* 中等螢幕 ( 768px 以下 轉為 2 欄 ) */
+        @media (max-width: 768px) {
+            body {
+                padding: 25px 15px;
+            }
+            .portfolio-grid {
+                grid-template-columns: repeat(2, 1fr);
+                gap: 15px;
+            }
+            .profile-card {
+                padding: 20px 25px;
+                margin-bottom: 25px;
+                width: 100%;
+            }
+            .avatar-wrapper {
+                width: 100px;
+                height: 100px;
+            }
+            .profile-card h1 {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* 小型手機 ( 480px 以下 可選 1 欄或雙欄，這裡設計極佳單欄體驗 ) */
+        @media (max-width: 480px) {
+            .portfolio-grid {
+                grid-template-columns: repeat(1, 1fr);
+                gap: 12px;
+            }
+            .card {
+                height: 95px;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 背景動態飄落雪花 -->
+    <div class="snow-wrapper">
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❅</div>
+        <div class="snowflake">❆</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❅</div>
+        <div class="snowflake">❆</div>
+        <div class="snowflake">❄</div>
+        <div class="snowflake">❅</div>
+        <div class="snowflake">❆</div>
+        <div class="snowflake">❄</div>
+    </div>
+
+    <div class="container">
+        
+        <!-- 中央個人資訊卡片 -->
+        <header class="profile-card">
+            <div class="avatar-wrapper">
+                <!-- 預設假大頭貼圖片 -->
+                <img src="https://api.dicebear.com/7.x/bottts/svg?seed=SnowyMacaron" alt="大頭貼" class="avatar">
+                <span class="avatar-decoration">❄️</span>
+            </div>
+            <h1>我的程式作品集</h1>
+            <p>前端開發闖關筆記 🚀</p>
+        </header>
+
+        <!-- 16 個作品集按鈕選單 -->
+        <main class="portfolio-grid">
+
+            <!-- 按鈕 1 (已解鎖) -->
+            <a href="w1/index.html" class="card unlocked">
+                <div class="card-header">
+                    <span class="badge">Week 01</span>
+                    <span class="card-icon">🎴</span>
+                </div>
+                <div class="card-title">Week 1-數位名片</div>
+            </a>
+
+            <!-- 按鈕 2 (已解鎖) -->
+            <a href="w2/index.html" class="card unlocked">
+                <div class="card-header">
+                    <span class="badge">Week 02</span>
+                    <span class="card-icon">🍔</span>
+                </div>
+                <div class="card-title">Week 2-今天吃甚麼？</div>
+            </a>
+
+            <!-- 按鈕 3 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 03</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 4 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 04</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 5 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 05</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 6 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 06</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 7 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 07</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 8 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 08</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 9 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 09</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 10 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 10</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 11 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 11</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 12 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 12</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 13 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 13</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 14 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 14</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 15 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 15</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+            <!-- 按鈕 16 (未解鎖) -->
+            <div class="card locked">
+                <div class="card-header">
+                    <span class="badge">Week 16</span>
+                    <span class="card-icon">🔒</span>
+                </div>
+                <div class="card-title">未解鎖關卡</div>
+            </div>
+
+        </main>
+    </div>
+
+</body>
+</html>
