@@ -1,0 +1,633 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>第五人格風格 - 莊園迷因產生器 | Meme Generator</title>
+
+    <!-- 引入 Google Fonts: Creepster (哥德恐怖風) & Cinzel (復古典雅風) & Noto Serif TC (繁體中文襯線體) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cinzel:wght@700;900&family=Creepster&family=Noto+Serif+TC:wght@700;900&display=swap" rel="stylesheet">
+    
+    <!-- 引入 FontAwesome 經典圖示庫 -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- 引入 html2canvas 截圖下載庫 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+
+    <style>
+        :root {
+            /* 第五人格色系：荒誕哥德、古木色、暗紅、鈕扣與粗縫線風格 */
+            --bg-dark: #0f0c0a;
+            --panel-bg: #1e1915;
+            --parchment-bg: #2a221b;
+            --border-gold: #8c6f3d;
+            --border-stitch: #4a3b2b;
+            --blood-red: #8b0000;
+            --blood-bright: #c0392b;
+            --text-gold: #d4af37;
+            --text-light: #e0d0c0;
+            --shadow-glow: rgba(139, 0, 0, 0.4);
+        }
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+            font-family: 'Noto Serif TC', 'Cinzel', serif;
+        }
+
+        body {
+            min-height: 100vh;
+            background-color: var(--bg-dark);
+            /* 模擬莊園迷霧與微弱燭光背景效果 */
+            background-image: 
+                radial-gradient(circle at 50% 30%, rgba(60, 20, 10, 0.5) 0%, rgba(10, 8, 6, 0.95) 80%),
+                repeating-linear-gradient(0deg, transparent, transparent 2px, rgba(0, 0, 0, 0.2) 2px, rgba(0, 0, 0, 0.2) 4px);
+            color: var(--text-light);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 20px;
+            position: relative;
+            overflow-x: hidden;
+        }
+
+        /* 呼吸感暗角 Effect */
+        body::after {
+            content: '';
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            box-shadow: inset 0 0 100px rgba(0, 0, 0, 0.85);
+            pointer-events: none;
+            z-index: 100;
+        }
+
+        header {
+            text-align: center;
+            margin-bottom: 25px;
+            z-index: 10;
+        }
+
+        header h1 {
+            font-family: 'Creepster', 'Noto Serif TC', cursive;
+            color: var(--blood-bright);
+            font-size: 2.8rem;
+            letter-spacing: 2px;
+            text-shadow: 0 0 10px rgba(192, 57, 43, 0.6), 2px 2px 0px #000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        header p {
+            color: var(--border-gold);
+            font-size: 0.95rem;
+            margin-top: 6px;
+            font-style: italic;
+            letter-spacing: 1px;
+        }
+
+        /* 主應用區域：響應式雙欄/單欄排版 */
+        .app-container {
+            display: flex;
+            flex-direction: row;
+            gap: 25px;
+            width: 100%;
+            max-width: 1100px;
+            z-index: 10;
+        }
+
+        /* 第五人格「縫線羊皮紙卡片」風格 */
+        .gothic-card {
+            background-color: var(--panel-bg);
+            border: 3px solid var(--border-gold);
+            border-radius: 8px;
+            /* 鈕扣縫線邊框效果 */
+            outline: 2px dashed var(--border-stitch);
+            outline-offset: -8px;
+            box-shadow: 0 12px 35px rgba(0, 0, 0, 0.9), inset 0 0 20px rgba(0, 0, 0, 0.6);
+            padding: 25px;
+            position: relative;
+        }
+
+        .control-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            gap: 18px;
+            min-width: 320px;
+        }
+
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 700;
+            color: var(--text-gold);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            border-bottom: 1px solid var(--border-stitch);
+            padding-bottom: 6px;
+            text-transform: uppercase;
+        }
+
+        /* 鈕扣縫線風格檔案上傳區 */
+        .file-upload-btn {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            background: var(--parchment-bg);
+            border: 2px dashed var(--border-gold);
+            border-radius: 6px;
+            padding: 16px;
+            color: var(--text-light);
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-align: center;
+        }
+
+        .file-upload-btn:hover {
+            background: #362c23;
+            border-color: var(--blood-bright);
+            color: #fff;
+            box-shadow: 0 0 12px var(--shadow-glow);
+        }
+
+        .file-upload-btn input[type="file"] {
+            position: absolute;
+            left: 0; top: 0;
+            opacity: 0;
+            width: 100%; height: 100%;
+            cursor: pointer;
+        }
+
+        /* 輸入框樣式 */
+        .input-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .input-group label {
+            font-size: 0.88rem;
+            color: var(--border-gold);
+        }
+
+        .custom-input {
+            width: 100%;
+            padding: 12px 14px;
+            border: 1px solid var(--border-stitch);
+            border-radius: 4px;
+            background: #120e0c;
+            font-size: 0.95rem;
+            color: var(--text-light);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+
+        .custom-input:focus {
+            border-color: var(--blood-bright);
+            box-shadow: 0 0 8px var(--shadow-glow);
+        }
+
+        /* 復古風格滑桿 Range Slider */
+        .slider-group {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .slider-header {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.85rem;
+            color: var(--border-gold);
+        }
+
+        .custom-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 6px;
+            border-radius: 3px;
+            background: #120e0c;
+            border: 1px solid var(--border-stitch);
+            outline: none;
+        }
+
+        .custom-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 18px;
+            height: 18px;
+            border-radius: 50%;
+            background: var(--blood-bright);
+            border: 2px solid var(--text-gold);
+            cursor: pointer;
+            box-shadow: 0 0 6px #000;
+            transition: transform 0.1s ease;
+        }
+
+        .custom-slider::-webkit-slider-thumb:hover {
+            transform: scale(1.25);
+        }
+
+        /* 下載按鈕 - 荒誕哥德火漆印章感 */
+        .download-btn {
+            background: linear-gradient(135deg, #7a0000 0%, #4a0000 100%);
+            color: var(--text-gold);
+            border: 2px solid var(--border-gold);
+            border-radius: 6px;
+            padding: 16px;
+            font-size: 1.1rem;
+            font-weight: 700;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            box-shadow: 0 6px 20px rgba(0, 0, 0, 0.8);
+            transition: all 0.3s ease;
+            margin-top: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .download-btn:hover {
+            background: linear-gradient(135deg, #a00000 0%, #600000 100%);
+            border-color: #f1c40f;
+            box-shadow: 0 0 15px var(--shadow-glow);
+            transform: translateY(-2px);
+        }
+
+        .download-btn:active {
+            transform: translateY(0);
+        }
+
+        /* 右側迷因預覽區 */
+        .preview-area {
+            flex: 1.2;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            min-height: 440px;
+        }
+
+        /* 迷因舞台容器：html2canvas 擷取目標 */
+        #meme-stage {
+            position: relative;
+            width: 100%;
+            max-width: 500px;
+            background-color: #120f0d;
+            border: 2px solid var(--border-gold);
+            border-radius: 4px;
+            overflow: hidden;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.9);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            user-select: none;
+        }
+
+        #meme-image {
+            width: 100%;
+            height: auto;
+            display: block;
+            object-fit: contain;
+            max-height: 600px;
+        }
+
+        /* 迷因文字：粗體 + 超顯眼黑色雙重描邊 */
+        .meme-text {
+            position: absolute;
+            width: 92%;
+            left: 50%;
+            transform: translateX(-50%);
+            text-align: center;
+            font-family: 'Creepster', 'Noto Serif TC', sans-serif;
+            color: #ffffff;
+            text-transform: uppercase;
+            line-height: 1.15;
+            word-wrap: break-word;
+            /* 多層黑色描邊 + 陰影效果，確保在任何亮/暗圖上皆清晰可見 */
+            text-shadow: 
+                -3px -3px 0 #000,  
+                 3px -3px 0 #000,
+                -3px  3px 0 #000,
+                 3px  3px 0 #000,
+                -2px  0px 0 #000,
+                 2px  0px 0 #000,
+                 0px -2px 0 #000,
+                 0px  2px 0 #000,
+                 0px  4px 10px rgba(0,0,0,0.95);
+            transition: top 0.05s ease, bottom 0.05s ease;
+            pointer-events: none;
+        }
+
+        #text-top-display { top: 6%; }
+        #text-bottom-display { bottom: 6%; }
+
+        .placeholder-notice {
+            position: absolute;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            color: var(--border-gold);
+            padding: 40px;
+            text-align: center;
+        }
+
+        .placeholder-notice i {
+            font-size: 3.5rem;
+            color: var(--blood-bright);
+            opacity: 0.8;
+        }
+
+        /* 響應式：手機版將預覽區調整至上方 */
+        @media (max-width: 768px) {
+            .app-container {
+                flex-direction: column-reverse;
+            }
+
+            header h1 {
+                font-size: 2rem;
+            }
+
+            .gothic-card {
+                padding: 18px;
+            }
+        }
+
+        /* Loading 轉圈效果 */
+        .spinner {
+            border: 3px solid rgba(255,255,255,0.2);
+            border-radius: 50%;
+            border-top: 3px solid var(--text-gold);
+            width: 20px;
+            height: 20px;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 標題區域 -->
+    <header>
+        <h1><i class="fa-solid fa-skull"></i> 莊園迷因產生器</h1>
+        <p>「逃脫或是被破譯？由你的迷因決定。」</p>
+    </header>
+
+    <main class="app-container">
+
+        <!-- 左側：控制面板區 -->
+        <section class="gothic-card control-panel">
+            
+            <!-- 1. 圖片上傳區塊 (Drag & Drop + Input File) -->
+            <div class="section-title">
+                <i class="fa-solid fa-mask"></i> 1. 上傳莊園照片 (本機圖片)
+            </div>
+            <label class="file-upload-btn" id="drop-zone">
+                <i class="fa-solid fa-file-arrow-up fa-lg" style="color: var(--blood-bright);"></i>
+                <span id="upload-text-label">點擊或拖曳本機圖片至此...</span>
+                <input type="file" id="image-input" accept="image/*">
+            </label>
+
+            <!-- 2. 文字輸入區塊 -->
+            <div class="section-title" style="margin-top: 8px;">
+                <i class="fa-solid fa-feather-pointed"></i> 2. 撰寫暗黑台詞
+            </div>
+            <div class="input-group">
+                <label for="top-text-input">上方文字 (Top Text)</label>
+                <input type="text" id="top-text-input" class="custom-input" placeholder="輸入上方文字..." value="當監管者開啟挽留">
+            </div>
+
+            <div class="input-group">
+                <label for="bottom-text-input">下方文字 (Bottom Text)</label>
+                <input type="text" id="bottom-text-input" class="custom-input" placeholder="輸入下方文字..." value="而求生者還在和大門拍照">
+            </div>
+
+            <!-- 3. 滑桿控制區塊 -->
+            <div class="section-title" style="margin-top: 8px;">
+                <i class="fa-solid fa-sliders"></i> 3. 調整文字位置與大小
+            </div>
+
+            <!-- 字體大小滑桿 -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span><i class="fa-solid fa-text-height"></i> 字體大小</span>
+                    <span id="font-size-val">38px</span>
+                </div>
+                <input type="range" id="font-size-slider" class="custom-slider" min="18" max="72" value="38">
+            </div>
+
+            <!-- 上方文字位置滑桿 -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span><i class="fa-solid fa-arrows-up-down"></i> 上方文字垂直位置</span>
+                    <span id="top-pos-val">6%</span>
+                </div>
+                <input type="range" id="top-pos-slider" class="custom-slider" min="1" max="40" value="6">
+            </div>
+
+            <!-- 下方文字位置滑桿 -->
+            <div class="slider-group">
+                <div class="slider-header">
+                    <span><i class="fa-solid fa-arrows-up-down"></i> 下方文字垂直位置</span>
+                    <span id="bottom-pos-val">6%</span>
+                </div>
+                <input type="range" id="bottom-pos-slider" class="custom-slider" min="1" max="40" value="6">
+            </div>
+
+            <!-- 4. 一鍵截圖下載按鈕 -->
+            <button id="download-btn" class="download-btn">
+                <i class="fa-solid fa-box-archive"></i> 下載莊園迷因 (my-meme.png)
+            </button>
+        </section>
+
+        <!-- 右側：迷因即時預覽區 -->
+        <section class="gothic-card preview-area">
+            <div id="meme-stage">
+                <!-- 預設提示區域 -->
+                <div id="placeholder-notice" class="placeholder-notice">
+                    <i class="fa-solid fa-ghost"></i>
+                    <p>尚未上傳檔案<br><small style="color: var(--border-stitch);">請上傳本機圖片以開啟破譯</small></p>
+                </div>
+
+                <!-- 迷因底圖 -->
+                <img id="meme-image" src="" alt="Meme Preview" style="display: none;">
+
+                <!-- 迷因文字層 -->
+                <div id="text-top-display" class="meme-text">當監管者開啟挽留</div>
+                <div id="text-bottom-display" class="meme-text">而求生者還在和大門拍照</div>
+            </div>
+        </section>
+
+    </main>
+
+    <script>
+        // ==========================================
+        // 1. 取得 DOM 控制元件
+        // ==========================================
+        const imageInput = document.getElementById('image-input');
+        const uploadTextLabel = document.getElementById('upload-text-label');
+        const memeImage = document.getElementById('meme-image');
+        const placeholderNotice = document.getElementById('placeholder-notice');
+
+        const topTextInput = document.getElementById('top-text-input');
+        const bottomTextInput = document.getElementById('bottom-text-input');
+        const textTopDisplay = document.getElementById('text-top-display');
+        const textBottomDisplay = document.getElementById('text-bottom-display');
+
+        const fontSizeSlider = document.getElementById('font-size-slider');
+        const fontSizeVal = document.getElementById('font-size-val');
+        const topPosSlider = document.getElementById('top-pos-slider');
+        const topPosVal = document.getElementById('top-pos-val');
+        const bottomPosSlider = document.getElementById('bottom-pos-slider');
+        const bottomPosVal = document.getElementById('bottom-pos-val');
+
+        const downloadBtn = document.getElementById('download-btn');
+        const memeStage = document.getElementById('meme-stage');
+        const dropZone = document.getElementById('drop-zone');
+
+        // ==========================================
+        // 2. 預設顯示 SVG 底圖 (避開空白畫面)
+        // ==========================================
+        function loadDefaultImage() {
+            const defaultSvg = `<svg xmlns="http://www.w3.org/2000/svg" width="600" height="450" viewBox="0 0 600 450">
+                <rect width="600" height="450" fill="#1c1613"/>
+                <circle cx="300" cy="225" r="140" fill="#2a201a" stroke="#8c6f3d" stroke-width="3" stroke-dasharray="8 6"/>
+                <text x="50%" y="45%" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="28" fill="#d4af37" font-weight="bold">點擊左側上傳照片</text>
+                <text x="50%" y="58%" dominant-baseline="middle" text-anchor="middle" font-family="serif" font-size="16" fill="#8b0000">或直接將圖片拖曳至此</text>
+            </svg>`;
+            memeImage.src = 'data:image/svg+xml;charset=utf-8,' + encodeURIComponent(defaultSvg);
+            memeImage.style.display = 'block';
+            placeholderNotice.style.display = 'none';
+        }
+
+        // ==========================================
+        // 3. 本機圖片上傳 (FileReader - 避開 CORS 錯誤)
+        // ==========================================
+        function handleFileSelect(file) {
+            if (file && file.type.startsWith('image/')) {
+                const reader = new FileReader();
+                reader.onload = function(e) {
+                    memeImage.src = e.target.result;
+                    memeImage.style.display = 'block';
+                    placeholderNotice.style.display = 'none';
+                    uploadTextLabel.textContent = file.name;
+                };
+                reader.readAsDataURL(file);
+            }
+        }
+
+        imageInput.addEventListener('change', (e) => {
+            handleFileSelect(e.target.files[0]);
+        });
+
+        // 支持拖曳圖片區域 (Drag and Drop)
+        dropZone.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--blood-bright)';
+        });
+
+        dropZone.addEventListener('dragleave', () => {
+            dropZone.style.borderColor = 'var(--border-gold)';
+        });
+
+        dropZone.addEventListener('drop', (e) => {
+            e.preventDefault();
+            dropZone.style.borderColor = 'var(--border-gold)';
+            if (e.dataTransfer.files.length > 0) {
+                handleFileSelect(e.dataTransfer.files[0]);
+            }
+        });
+
+        // ==========================================
+        // 4. 即時文字與滑桿連動控制
+        // ==========================================
+        topTextInput.addEventListener('input', () => {
+            textTopDisplay.textContent = topTextInput.value;
+        });
+
+        bottomTextInput.addEventListener('input', () => {
+            textBottomDisplay.textContent = bottomTextInput.value;
+        });
+
+        fontSizeSlider.addEventListener('input', () => {
+            const size = fontSizeSlider.value + 'px';
+            textTopDisplay.style.fontSize = size;
+            textBottomDisplay.style.fontSize = size;
+            fontSizeVal.textContent = size;
+        });
+
+        topPosSlider.addEventListener('input', () => {
+            const pos = topPosSlider.value + '%';
+            textTopDisplay.style.top = pos;
+            topPosVal.textContent = pos;
+        });
+
+        bottomPosSlider.addEventListener('input', () => {
+            const pos = bottomPosSlider.value + '%';
+            textBottomDisplay.style.bottom = pos;
+            bottomPosVal.textContent = pos;
+        });
+
+        // ==========================================
+        // 5. 一鍵下載圖檔 (使用 html2canvas)
+        // ==========================================
+        downloadBtn.addEventListener('click', function() {
+            const originalBtnContent = downloadBtn.innerHTML;
+            downloadBtn.innerHTML = `<div class="spinner"></div> 封印畫卷中...`;
+            downloadBtn.style.pointerEvents = 'none';
+
+            // 利用 html2canvas 繪製 #meme-stage
+            html2canvas(memeStage, {
+                scale: 2, // 提高 2 倍解析度，確保圖片高品質清晰
+                useCORS: true,
+                backgroundColor: null
+            }).then(canvas => {
+                const imgData = canvas.toDataURL('image/png');
+
+                // 建立虛擬 <a> 連結並自動觸發下載
+                const a = document.createElement('a');
+                a.href = imgData;
+                a.download = 'my-meme.png';
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+
+                // 恢復按鈕文字
+                downloadBtn.innerHTML = `<i class="fa-solid fa-check"></i> 成功匯出！`;
+                setTimeout(() => {
+                    downloadBtn.innerHTML = originalBtnContent;
+                    downloadBtn.style.pointerEvents = 'auto';
+                }, 2000);
+            }).catch(err => {
+                console.error('Download error:', err);
+                alert('下載失敗，請重試！');
+                downloadBtn.innerHTML = originalBtnContent;
+                downloadBtn.style.pointerEvents = 'auto';
+            });
+        });
+
+        // 初始化
+        window.onload = function() {
+            loadDefaultImage();
+            textTopDisplay.style.fontSize = fontSizeSlider.value + 'px';
+            textBottomDisplay.style.fontSize = fontSizeSlider.value + 'px';
+        };
+    </script>
+</body>
+</html>
