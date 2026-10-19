@@ -1,0 +1,410 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>朋友對我的動態留言板</title>
+  <style>
+    /* ==========================================
+       1. 全局變數與色彩設定 (馬卡龍藍色系)
+       ========================================== */
+    :root {
+      /* 【主題顏色區 - 可依喜好自由修改】 */
+      --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #f0f9ff 100%); /* 背景柔和藍漸層 */
+      --card-bg: rgba(255, 255, 255, 0.85); /* 卡片半透明白 */
+      --card-border: #93c5fd;               /* 卡片邊框馬卡龍藍 */
+      --primary-text: #1e3a8a;              /* 主要文字深藍色 */
+      --secondary-text: #60a5fa;            /* 次要文字/時間淺藍色 */
+      --highlight-glow: #38bdf8;            /* 輪播高亮時的發光顏色 (天藍色) */
+      
+      /* 【輪播動畫設定】 */
+      --highlight-scale: 1.08;              /* 高亮卡片的放大倍率 */
+    }
+
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background: var(--bg-gradient);
+      min-height: 100vh;
+      padding: 2rem 1rem;
+      color: var(--primary-text);
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* ==========================================
+       2. 雪花背景特效
+       ========================================== */
+    .snowflake {
+      position: fixed;
+      top: -10px;
+      color: #ffffff;
+      user-select: none;
+      z-index: 1;
+      pointer-events: none;
+      animation: fall linear infinite;
+      opacity: 0.8;
+    }
+
+    @keyframes fall {
+      0% {
+        transform: translateY(0) rotate(0deg);
+      }
+      100% {
+        transform: translateY(105vh) rotate(360deg);
+      }
+    }
+
+    /* ==========================================
+       3. 頁面標題區
+       ========================================== */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    header h1 {
+      font-size: 2.5rem;
+      color: var(--primary-text);
+      text-shadow: 2px 2px 4px rgba(255, 255, 255, 0.8);
+      letter-spacing: 2px;
+      margin-bottom: 0.5rem;
+    }
+
+    header p {
+      color: #3b82f6;
+      font-size: 1.1rem;
+    }
+
+    /* ==========================================
+       4. 載入中動畫 (Loading)
+       ========================================== */
+    #loading {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      margin-top: 5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    .snowflake-spinner {
+      font-size: 3.5rem;
+      color: #38bdf8;
+      animation: spinAndPulse 1.5s infinite ease-in-out;
+    }
+
+    @keyframes spinAndPulse {
+      0% { transform: rotate(0deg) scale(0.8); opacity: 0.5; }
+      50% { transform: rotate(180deg) scale(1.2); opacity: 1; }
+      100% { transform: rotate(360deg) scale(0.8); opacity: 0.5; }
+    }
+
+    #loading p {
+      margin-top: 1rem;
+      font-size: 1.2rem;
+      font-weight: bold;
+      color: var(--primary-text);
+      letter-spacing: 1px;
+    }
+
+    /* ==========================================
+       5. 瀑布流卡片牆 (Masonry Layout)
+       ========================================== */
+    .masonry-container {
+      max-width: 1200px;
+      margin: 0 auto;
+      /* CSS 瀑布流關鍵：預設 3 欄 */
+      column-count: 3;
+      column-gap: 1.5rem;
+      position: relative;
+      z-index: 2;
+    }
+
+    /* 響應式欄位調整 */
+    @media (max-width: 900px) {
+      .masonry-container { column-count: 2; }
+    }
+    @media (max-width: 600px) {
+      .masonry-container { column-count: 1; }
+    }
+
+    /* ==========================================
+       6. 留言卡片樣式與輪播特效
+       ========================================== */
+    .card {
+      background: var(--card-bg);
+      border: 2px solid var(--card-border);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      break-inside: avoid; /* 防止卡片在瀑布流中被截斷 */
+      backdrop-filter: blur(8px); /* 輕微毛玻璃效果 */
+      box-shadow: 0 8px 20px rgba(186, 230, 253, 0.3);
+      
+      /* 動畫過渡效果 (控制聚焦放大時流暢度) */
+      transition: all 0.6s cubic-bezier(0.25, 0.8, 0.25, 1);
+      position: relative;
+    }
+
+    /* 卡片頭部：名字與時間 */
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 0.8rem;
+      border-bottom: 1px dashed #bfdbfe;
+      padding-bottom: 0.5rem;
+    }
+
+    .card-author {
+      font-weight: bold;
+      font-size: 1.15rem;
+      color: var(--primary-text);
+      display: flex;
+      align-items: center;
+      gap: 0.3rem;
+    }
+
+    .card-date {
+      font-size: 0.8rem;
+      color: var(--secondary-text);
+    }
+
+    /* 留言內容 */
+    .card-content {
+      font-size: 1rem;
+      line-height: 1.6;
+      color: #334155;
+      white-space: pre-wrap; /* 保留留言中的換行 */
+      word-break: break-word;
+    }
+
+    /* 【重點】輪播亮起特效 (Highlight) */
+    .card.highlight {
+      transform: scale(var(--highlight-scale));
+      border-color: #0284c7;
+      box-shadow: 0 0 25px var(--highlight-glow), 0 10px 30px rgba(0, 0, 0, 0.15);
+      z-index: 10;
+      background: rgba(255, 255, 255, 0.98);
+    }
+
+    /* 【重點】未被選中的卡片虛化特效 */
+    .masonry-container.has-highlight .card:not(.highlight) {
+      opacity: 0.5;
+      filter: blur(1.5px) grayscale(20%);
+      transform: scale(0.98);
+    }
+  </style>
+</head>
+<body>
+
+  <!-- 背景雪花容器 -->
+  <div id="snowflakes-container"></div>
+
+  <!-- 標題區 -->
+  <header>
+    <h1>❄️ 朋友對我的動態留言板 ❄️</h1>
+    <p>溫馨、悄悄話與祝福的夢幻雪花牆</p>
+  </header>
+
+  <!-- 載入中動畫 -->
+  <div id="loading">
+    <div class="snowflake-spinner">❄</div>
+    <p>讀取留言中...</p>
+  </div>
+
+  <!-- 瀑布流留言牆 -->
+  <main class="masonry-container" id="masonry-wall"></main>
+
+  <script>
+    /* ==========================================
+       【參數設定區】可自由調整輪播秒數與試算表網址
+       ========================================== */
+    const CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vSt4j3rphyxlhkFt-OB0znwJt_I9D8vx2HjroHi0yB42EHHFvwh9aZc4Z7i2YyvONMnmnlM7HiecpLz/pub?output=csv';
+    const ROTATE_INTERVAL = 3000; // 輪播間隔時間：3000毫秒 = 3秒
+
+    // 全域變數
+    let cardsElements = [];
+    let currentIndex = 0;
+    let carouselTimer = null;
+
+    /* ==========================================
+       1. 初始化頁面與載入資料
+       ========================================== */
+    document.addEventListener('DOMContentLoaded', () => {
+      createSnowflakes(30); // 產生 30 片背景雪花
+      fetchMessages();
+    });
+
+    // 取得 Google 試算表 CSV 資料
+    async function fetchMessages() {
+      const loadingEl = document.getElementById('loading');
+      const wallEl = document.getElementById('masonry-wall');
+
+      try {
+        const response = await fetch(CSV_URL);
+        if (!response.ok) throw new Error('網路回應不成功');
+        
+        const csvText = await response.text();
+        const parsedData = parseCSV(csvText);
+
+        // 隱藏 Loading 動畫
+        loadingEl.style.display = 'none';
+
+        // 渲染卡片
+        renderCards(parsedData);
+
+        // 開啟 3 秒輪播特效
+        if (cardsElements.length > 0) {
+          startCarousel();
+        }
+
+      } catch (error) {
+        console.error('讀取留言失敗：', error);
+        loadingEl.innerHTML = `<p style="color: #ef4444;">❄ 讀取留言失敗，請確認網路或連結設定。</p>`;
+      }
+    }
+
+    /* ==========================================
+       2. 正確解析 CSV (防止留言中的逗號破壞欄位)
+       ========================================== */
+    function parseCSV(text) {
+      const lines = text.trim().split(/\r\n|\n/);
+      const result = [];
+
+      // 從第 1 行開始 (跳過第 0 行的標題欄位)
+      for (let i = 1; i < lines.length; i++) {
+        if (!lines[i]) continue;
+
+        // 使用正則表達式，妥善處理被雙引號包覆且含有逗號的字串
+        const regex = /(?:\"([^\"]*(?:\"\"[^\"]*)*)\"|([^,\"]*))(?:,|$)/g;
+        const row = [];
+        let match;
+
+        while ((match = regex.exec(lines[i])) && row.length < 3) {
+          // match[1] 是雙引號內的值，match[2] 是普通值
+          let val = match[1] !== undefined ? match[1].replace(/\"\"/g, '"') : match[2];
+          row.push(val ? val.trim() : '');
+          if (regex.lastIndex === lines[i].length) break;
+        }
+
+        // CSV 預設欄位：0:時間戳記, 1:姓名, 2:悄悄話
+        if (row.length >= 2) {
+          result.push({
+            timestamp: row[0] || '',
+            name: row[1] || '匿名朋友',
+            content: row[2] || ''
+          });
+        }
+      }
+      return result;
+    }
+
+    /* ==========================================
+       3. 動態渲染留言卡片
+       ========================================== */
+    function renderCards(data) {
+      const wallEl = document.getElementById('masonry-wall');
+      wallEl.innerHTML = '';
+
+      data.forEach((item, index) => {
+        const card = document.createElement('div');
+        card.classList.add('card');
+
+        // 安全地過濾 HTML 避免 XSS
+        const safeName = escapeHtml(item.name);
+        const safeContent = escapeHtml(item.content);
+        const safeDate = escapeHtml(item.timestamp);
+
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-author">❄️ ${safeName}</span>
+            <span class="card-date">${safeDate}</span>
+          </div>
+          <div class="card-content">${safeContent}</div>
+        `;
+
+        wallEl.appendChild(card);
+      });
+
+      // 取得所有生成的卡片 DOM
+      cardsElements = Array.from(document.querySelectorAll('.card'));
+    }
+
+    /* ==========================================
+       4. 3秒輪播 Highlight 特效 (核心功能)
+       ========================================== */
+    function startCarousel() {
+      const wallEl = document.getElementById('masonry-wall');
+      
+      // 加上 class 讓未選中的卡片能自動套用虛化 (Blur) 效果
+      wallEl.classList.add('has-highlight');
+
+      // 立即執行第一次
+      highlightNextCard();
+
+      // 設定計時器，每 3 秒 (ROTATE_INTERVAL) 切換一次
+      carouselTimer = setInterval(highlightNextCard, ROTATE_INTERVAL);
+    }
+
+    function highlightNextCard() {
+      if (cardsElements.length === 0) return;
+
+      // 移除上一次卡片的高亮狀態
+      cardsElements.forEach(card => card.classList.remove('highlight'));
+
+      // 取得當前要高亮的卡片
+      const currentCard = cardsElements[currentIndex];
+      currentCard.classList.add('highlight');
+
+      // 柔和地將畫面滾動至高亮的卡片區域 (視需要可自行決定是否保留)
+      currentCard.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+
+      // 遞增索引，播到最後一張時自動歸零循環
+      currentIndex = (currentIndex + 1) % cardsElements.length;
+    }
+
+    /* ==========================================
+       5. 輔助函式 (HTML 轉義與雪花產生器)
+       ========================================== */
+    // 防止簡單的 XSS 攻擊
+    function escapeHtml(str) {
+      return str
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;")
+        .replace(/"/g, "&quot;")
+        .replace(/'/g, "&#039;");
+    }
+
+    // 動態生成背景飄落雪花
+    function createSnowflakes(count) {
+      const container = document.getElementById('snowflakes-container');
+      const snowflakeChars = ['❄', '❅', '❆'];
+
+      for (let i = 0; i < count; i++) {
+        const flake = document.createElement('div');
+        flake.classList.add('snowflake');
+        flake.innerText = snowflakeChars[Math.floor(Math.random() * snowflakeChars.length)];
+        
+        // 隨機尺寸與落點
+        flake.style.left = `${Math.random() * 100}vw`;
+        flake.style.animationDuration = `${Math.random() * 5 + 5}s`; // 5~10秒落下一輪
+        flake.style.animationDelay = `${Math.random() * 5}s`;
+        flake.style.fontSize = `${Math.random() * 10 + 10}px`;
+        
+        container.appendChild(flake);
+      }
+    }
+  </script>
+</body>
+</html>
