@@ -4,10 +4,156 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>個人數位名片</title>
-    <!-- 引入外部 CSS 檔 -->
-    <link rel="stylesheet" href="style.css">
     <!-- 引入 Font Awesome 按鈕圖示庫 -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    
+    <style>
+        /* 1. 全局初始化設定 */
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
+        }
+
+        /* 2. 背景與畫面置中設定 */
+        body {
+            min-height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            /* 溫和淡藍色漸層背景 */
+            background: linear-gradient(135deg, #e6f0fa 0%, #d4e6f1 50%, #c2dcf0 100%);
+            position: relative;
+            overflow: hidden; /* 防止雪花飄出螢幕產生滾動條 */
+        }
+
+        /* 3. 名片卡片主體 */
+        .card {
+            background: rgba(255, 255, 255, 0.9); /* 半透明純白，增添溫和質感 */
+            backdrop-filter: blur(10px); /* 背景模糊效果 */
+            width: 320px;
+            padding: 40px 30px;
+            border-radius: 24px;
+            text-align: center;
+            box-shadow: 0 15px 35px rgba(135, 175, 205, 0.25); /* 柔和淡藍色陰影 */
+            border: 1px solid rgba(255, 255, 255, 0.8);
+            position: relative;
+            z-index: 10; /* 確保名片在雪花上方 */
+            transition: transform 0.3s ease, box-shadow 0.3s ease;
+        }
+
+        .card:hover {
+            transform: translateY(-6px);
+            box-shadow: 0 20px 40px rgba(135, 175, 205, 0.35);
+        }
+
+        /* 4. 圓形大頭貼 */
+        .avatar-container {
+            margin-bottom: 20px;
+        }
+
+        .avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%; /* 做成圓形照片 */
+            object-fit: cover;
+            border: 4px solid #ffffff;
+            box-shadow: 0 6px 15px rgba(160, 195, 220, 0.4);
+        }
+
+        /* 5. 姓名與自我介紹文字 */
+        .name {
+            font-size: 1.4rem;
+            color: #34495e;
+            font-weight: 600;
+            margin-bottom: 8px;
+            letter-spacing: 0.5px;
+        }
+
+        .bio {
+            font-size: 0.9rem;
+            color: #7f8c8d;
+            line-height: 1.5;
+            margin-bottom: 28px;
+        }
+
+        /* 6. 按鈕區域與按鈕樣式 */
+        .buttons {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .btn {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 20px;
+            border-radius: 50px; /* 圓角膠囊按鈕 */
+            text-decoration: none;
+            font-size: 0.95rem;
+            font-weight: 500;
+            transition: all 0.3s ease;
+        }
+
+        /* Instagram 按鈕風格 */
+        .btn-instagram {
+            background-color: #f4f8fb;
+            color: #5c82a6;
+            border: 1px solid #d0e1f0;
+        }
+
+        .btn-instagram:hover {
+            background-color: #5c82a6;
+            color: #ffffff;
+            box-shadow: 0 5px 15px rgba(92, 130, 166, 0.3);
+        }
+
+        /* Gmail 按鈕風格 */
+        .btn-gmail {
+            background-color: #eef6fc;
+            color: #4a90e2;
+            border: 1px solid #c8e0f8;
+        }
+
+        .btn-gmail:hover {
+            background-color: #4a90e2;
+            color: #ffffff;
+            box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
+        }
+
+        /* 7. 淡藍色雪花飄落動畫 */
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: rgba(180, 215, 240, 0.8); /* 淡藍色雪花 */
+            font-size: 1.2rem;
+            user-select: none;
+            pointer-events: none;
+            animation: fall linear infinite;
+        }
+
+        /* 雪花不同位置與降落速度 */
+        .snowflake:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; font-size: 1rem; }
+        .snowflake:nth-child(2) { left: 25%; animation-duration: 10s; animation-delay: 2s; font-size: 1.4rem; }
+        .snowflake:nth-child(3) { left: 40%; animation-duration: 7s; animation-delay: 4s; font-size: 0.9rem; }
+        .snowflake:nth-child(4) { left: 60%; animation-duration: 11s; animation-delay: 1s; font-size: 1.3rem; }
+        .snowflake:nth-child(5) { left: 75%; animation-duration: 9s; animation-delay: 3s; font-size: 1.1rem; }
+        .snowflake:nth-child(6) { left: 90%; animation-duration: 12s; animation-delay: 5s; font-size: 1rem; }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg);
+                opacity: 0.2;
+            }
+        }
+    </style>
 </head>
 <body>
 
@@ -23,25 +169,22 @@
     <div class="card">
         <!-- 1. 圓形大頭貼照片 -->
         <div class="avatar-container">
-            <!-- 提示：可將 src 改成自己的圖片檔案或網址，例如：src="my-photo.jpg" -->
             <img src="https://i.postimg.cc/8Cq9bK0W/IMG-6693-(1).jpg" alt="個人大頭貼" class="avatar">
         </div>
 
         <!-- 2. 姓名與一行簡短自我介紹 -->
-        <h1 class="name">hana </h1>
+        <h1 class="name">hana</h1>
         <p class="bio">雪花飄飄飄❄️</p>
 
         <!-- 3. 按鈕區塊 (Instagram & Gmail) -->
         <div class="buttons">
             <!-- Instagram 按鈕 -->
-            <!-- 提示：將 href 內的網址替換為你的 Instagram 帳號網址 -->
             <a href="https://www.instagram.com" target="_blank" class="btn btn-instagram">
                 <i class="fa-brands fa-instagram"></i>
                 <span>Instagram</span>
             </a>
 
             <!-- Gmail 按鈕 -->
-            <!-- 提示：將 href 內的 mailto: 後面替換為你的 Gmail 信箱 -->
             <a href="mailto:yourname@gmail.com" class="btn btn-gmail">
                 <i class="fa-regular fa-envelope"></i>
                 <span>Gmail 聯繫我</span>
@@ -51,148 +194,3 @@
 
 </body>
 </html>
-/* 1. 全局初始化設定 */
-* {
-    margin: 0;
-    padding: 0;
-    box-sizing: border-box;
-    font-family: 'PingFang TC', 'Microsoft JhengHei', sans-serif;
-}
-
-/* 2. 背景與畫面置中設定 */
-body {
-    min-height: 100vh;
-    display: flex;
-    justify-content: center;
-    align-items: center;
-    /* 溫和淡藍色漸層背景 */
-    background: linear-gradient(135deg, #e6f0fa 0%, #d4e6f1 50%, #c2dcf0 100%);
-    position: relative;
-    overflow: hidden; /* 防止雪花飄出螢幕產生滾動條 */
-}
-
-/* 3. 名片卡片主體 */
-.card {
-    background: rgba(255, 255, 255, 0.9); /* 半透明純白，增添溫和質感 */
-    backdrop-filter: blur(10px); /* 背景模糊效果 */
-    width: 320px;
-    padding: 40px 30px;
-    border-radius: 24px;
-    text-align: center;
-    box-shadow: 0 15px 35px rgba(135, 175, 205, 0.25); /* 柔和淡藍色陰影 */
-    border: 1px solid rgba(255, 255, 255, 0.8);
-    position: relative;
-    z-index: 10; /* 確保名片在雪花上方 */
-    transition: transform 0.3s ease, box-shadow 0.3s ease;
-}
-
-.card:hover {
-    transform: translateY(-6px);
-    box-shadow: 0 20px 40px rgba(135, 175, 205, 0.35);
-}
-
-/* 4. 圓形大頭貼 */
-.avatar-container {
-    margin-bottom: 20px;
-}
-
-.avatar {
-    width: 110px;
-    height: 110px;
-    border-radius: 50%; /* 做成圓形照片 */
-    object-fit: cover;
-    border: 4px solid #ffffff;
-    box-shadow: 0 6px 15px rgba(160, 195, 220, 0.4);
-}
-
-/* 5. 姓名與自我介紹文字 */
-.name {
-    font-size: 1.4rem;
-    color: #34495e;
-    font-weight: 600;
-    margin-bottom: 8px;
-    letter-spacing: 0.5px;
-}
-
-.bio {
-    font-size: 0.9rem;
-    color: #7f8c8d;
-    line-height: 1.5;
-    margin-bottom: 28px;
-}
-
-/* 6. 按鈕區域與按鈕樣式 */
-.buttons {
-    display: flex;
-    flex-direction: column;
-    gap: 12px;
-}
-
-.btn {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    padding: 12px 20px;
-    border-radius: 50px; /* 圓角膠囊按鈕 */
-    text-decoration: none;
-    font-size: 0.95rem;
-    font-weight: 500;
-    transition: all 0.3s ease;
-}
-
-/* Instagram 按鈕風格 */
-.btn-instagram {
-    background-color: #f4f8fb;
-    color: #5c82a6;
-    border: 1px solid #d0e1f0;
-}
-
-.btn-instagram:hover {
-    background-color: #5c82a6;
-    color: #ffffff;
-    box-shadow: 0 5px 15px rgba(92, 130, 166, 0.3);
-}
-
-/* Gmail 按鈕風格 */
-.btn-gmail {
-    background-color: #eef6fc;
-    color: #4a90e2;
-    border: 1px solid #c8e0f8;
-}
-
-.btn-gmail:hover {
-    background-color: #4a90e2;
-    color: #ffffff;
-    box-shadow: 0 5px 15px rgba(74, 144, 226, 0.3);
-}
-
-/* 7. 淡藍色雪花飄落動畫 */
-.snowflake {
-    position: absolute;
-    top: -10px;
-    color: rgba(180, 215, 240, 0.8); /* 淡藍色雪花 */
-    font-size: 1.2rem;
-    user-select: none;
-    pointer-events: none;
-    animation: fall linear infinite;
-}
-
-/* 雪花不同位置與降落速度 */
-.snowflake:nth-child(1) { left: 10%; animation-duration: 8s; animation-delay: 0s; font-size: 1rem; }
-.snowflake:nth-child(2) { left: 25%; animation-duration: 10s; animation-delay: 2s; font-size: 1.4rem; }
-.snowflake:nth-child(3) { left: 40%; animation-duration: 7s; animation-delay: 4s; font-size: 0.9rem; }
-.snowflake:nth-child(4) { left: 60%; animation-duration: 11s; animation-delay: 1s; font-size: 1.3rem; }
-.snowflake:nth-child(5) { left: 75%; animation-duration: 9s; animation-delay: 3s; font-size: 1.1rem; }
-.snowflake:nth-child(6) { left: 90%; animation-duration: 12s; animation-delay: 5s; font-size: 1rem; }
-
-@keyframes fall {
-    0% {
-        transform: translateY(0) rotate(0deg);
-        opacity: 0.8;
-    }
-    100% {
-        transform: translateY(105vh) rotate(360deg);
-        opacity: 0.2;
-    }
-}
