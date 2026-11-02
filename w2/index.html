@@ -1,0 +1,335 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>今天吃什麼？ - 馬卡龍雪花抽籤機</title>
+    <!-- 引入 Canvas Confetti 慶祝彩帶效果套件 -->
+    <script src="https://cdn.jsdelivr.net/npm/canvas-confetti@1.6.0/dist/confetti.browser.min.js"></script>
+
+    <style>
+        /* 全局重置與變數定義 */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        :root {
+            --bg-gradient: linear-gradient(135deg, #e0f2fe 0%, #bae6fd 50%, #7dd3fc 100%);
+            --card-bg: rgba(255, 255, 255, 0.85);
+            --primary-blue: #38bdf8;
+            --dark-blue: #0284c7;
+            --accent-snow: #f0f9ff;
+            --text-main: #0c4a6e;
+            --shadow: 0 20px 40px rgba(125, 211, 252, 0.3);
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, Roboto, sans-serif;
+            min-height: 100vh;
+            background: var(--bg-gradient);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            position: relative;
+            overflow-x: hidden;
+            color: var(--text-main);
+            padding: 20px;
+        }
+
+        /* 背景雪花 */
+        .snow-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        .snowflake {
+            position: absolute;
+            top: -10px;
+            color: #ffffff;
+            user-select: none;
+            opacity: 0.8;
+            animation: fall linear infinite;
+        }
+
+        @keyframes fall {
+            0% {
+                transform: translateY(0) rotate(0deg);
+                opacity: 0.9;
+            }
+            100% {
+                transform: translateY(105vh) rotate(360deg);
+                opacity: 0.2;
+            }
+        }
+
+        /* 主要卡片樣式 */
+        .card {
+            position: relative;
+            z-index: 10;
+            background: var(--card-bg);
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            border: 3px solid rgba(255, 255, 255, 0.9);
+            border-radius: 28px;
+            padding: 40px 30px;
+            width: 100%;
+            max-width: 420px;
+            text-align: center;
+            box-shadow: var(--shadow);
+        }
+
+        .subtitle {
+            font-size: 0.95rem;
+            font-weight: 600;
+            color: #0284c7;
+            letter-spacing: 2px;
+            margin-bottom: 8px;
+        }
+
+        .main-title {
+            font-size: 2.2rem;
+            color: var(--text-main);
+            margin-bottom: 25px;
+            font-weight: 800;
+            line-height: 1.3;
+            min-height: 2.8rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        /* 彈跳動畫 */
+        .bounce-animation {
+            animation: popScale 0.6s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
+        }
+
+        @keyframes popScale {
+            0% { transform: scale(0.5); opacity: 0; }
+            70% { transform: scale(1.15); }
+            100% { transform: scale(1); opacity: 1; }
+        }
+
+        /* 抽籤按鈕 */
+        .draw-btn {
+            background: linear-gradient(135deg, #38bdf8 0%, #0284c7 100%);
+            color: white;
+            border: none;
+            padding: 16px 36px;
+            font-size: 1.25rem;
+            font-weight: 700;
+            border-radius: 50px;
+            cursor: pointer;
+            box-shadow: 0 8px 20px rgba(56, 189, 248, 0.4);
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .draw-btn:hover {
+            transform: translateY(-3px) scale(1.02);
+            box-shadow: 0 12px 25px rgba(56, 189, 248, 0.5);
+        }
+
+        .draw-btn:active {
+            transform: translateY(1px) scale(0.98);
+        }
+
+        .draw-btn:disabled {
+            background: #cbd5e1;
+            cursor: not-allowed;
+            box-shadow: none;
+        }
+
+        /* 結果與圖片展示區 */
+        .result-container {
+            display: none;
+            margin-top: 25px;
+            animation: fadeIn 0.5s ease-in-out forwards;
+        }
+
+        .result-container.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .image-wrapper {
+            width: 100%;
+            height: 220px;
+            border-radius: 20px;
+            overflow: hidden;
+            box-shadow: 0 8px 16px rgba(0, 0, 0, 0.08);
+            border: 4px solid white;
+            margin-bottom: 20px;
+            background-color: #f1f5f9;
+        }
+
+        .image-wrapper img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* 地圖按鈕 */
+        .map-btn {
+            display: inline-block;
+            width: 100%;
+            padding: 14px 20px;
+            background-color: #ffffff;
+            color: var(--dark-blue);
+            border: 2px solid var(--primary-blue);
+            text-decoration: none;
+            font-size: 1.1rem;
+            font-weight: 700;
+            border-radius: 50px;
+            transition: all 0.3s ease;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+        }
+
+        .map-btn:hover {
+            background-color: var(--primary-blue);
+            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 189, 248, 0.3);
+        }
+    </style>
+</head>
+<body>
+
+    <!-- 飄雪背景容器 -->
+    <div class="snow-container" id="snowContainer"></div>
+
+    <!-- 主要內容卡片 -->
+    <main class="card">
+        <div class="subtitle">❄️ 今天吃什麼？ ❄️</div>
+        <h1 class="main-title" id="titleText">今天吃什麼?</h1>
+
+        <button class="draw-btn" id="drawBtn">
+            <span>🎲 點我抽籤</span>
+        </button>
+
+        <!-- 抽籤結果區塊 -->
+        <div class="result-container" id="resultContainer">
+            <div class="image-wrapper">
+                <img id="foodImage" src="" alt="美食圖片">
+            </div>
+            <a id="mapBtn" class="map-btn" href="#" target="_blank" rel="noopener noreferrer">
+                📍 馬上出發 (Google Map)
+            </a>
+        </div>
+    </main>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+
+            // 食物資料庫
+            const foodList = [
+                {
+                    name: "麥噹噹 🍔",
+                    image: "https://images.unsplash.com/photo-1568901346375-23c9450c58cd?auto=format&fit=crop&w=800&q=80",
+                    map: "https://www.google.com/maps/search/麥當勞"
+                },
+                {
+                    name: "丹丹漢堡 🍔",
+                    image: "https://images.unsplash.com/photo-1550547660-d9450f859349?auto=format&fit=crop&w=800&q=80",
+                    map: "https://www.google.com/maps/search/丹丹漢堡"
+                },
+                {
+                    name: "深水食堂 🍱",
+                    image: "https://images.unsplash.com/photo-1546069901-ba9599a7e63c?auto=format&fit=crop&w=800&q=80",
+                    map: "https://www.google.com/maps/search/深水食堂"
+                },
+                {
+                    name: "THE T café ☕",
+                    image: "https://images.unsplash.com/photo-1501339847302-ac426a4a7cbb?auto=format&fit=crop&w=800&q=80",
+                    map: "https://www.google.com/maps/search/THE+T+cafe"
+                },
+                {
+                    name: "7-11 🏪",
+                    image: "https://images.unsplash.com/photo-1578916171728-46686eac8d58?auto=format&fit=crop&w=800&q=80",
+                    map: "https://www.google.com/maps/search/7-11"
+                }
+            ];
+
+            const drawBtn = document.getElementById('drawBtn');
+            const titleText = document.getElementById('titleText');
+            const resultContainer = document.getElementById('resultContainer');
+            const foodImage = document.getElementById('foodImage');
+            const mapBtn = document.getElementById('mapBtn');
+            const snowContainer = document.getElementById('snowContainer');
+
+            // 生成背景雪花
+            function createSnowflakes() {
+                const snowflakeCount = 25;
+                const icons = ['❄', '❅', '❆', '✨'];
+
+                for (let i = 0; i < snowflakeCount; i++) {
+                    const snowflake = document.createElement('div');
+                    snowflake.classList.add('snowflake');
+                    snowflake.innerText = icons[Math.floor(Math.random() * icons.length)];
+                    snowflake.style.left = `${Math.random() * 100}vw`;
+                    snowflake.style.animationDuration = `${Math.random() * 3 + 5}s`;
+                    snowflake.style.animationDelay = `${Math.random() * 5}s`;
+                    snowflake.style.fontSize = `${Math.random() * 10 + 12}px`;
+                    snowContainer.appendChild(snowflake);
+                }
+            }
+            createSnowflakes();
+
+            // 點擊抽籤邏輯
+            drawBtn.addEventListener('click', () => {
+                drawBtn.disabled = true;
+                resultContainer.classList.remove('show');
+                titleText.classList.remove('bounce-animation');
+
+                let counter = 0;
+                const speed = 80;
+                const totalDuration = 1800;
+
+                const interval = setInterval(() => {
+                    const randomTemp = foodList[Math.floor(Math.random() * foodList.length)];
+                    titleText.innerText = randomTemp.name;
+                    counter += speed;
+
+                    if (counter >= totalDuration) {
+                        clearInterval(interval);
+
+                        const selectedFood = foodList[Math.floor(Math.random() * foodList.length)];
+
+                        titleText.innerText = selectedFood.name;
+                        
+                        // 強制觸發 DOM 重繪以重複播放動畫
+                        void titleText.offsetWidth;
+                        titleText.classList.add('bounce-animation');
+
+                        foodImage.src = selectedFood.image;
+                        mapBtn.href = selectedFood.map;
+
+                        resultContainer.classList.add('show');
+                        drawBtn.disabled = false;
+
+                        if (typeof confetti === 'function') {
+                            confetti({
+                                particleCount: 70,
+                                spread: 60,
+                                origin: { y: 0.6 },
+                                colors: ['#38bdf8', '#7dd3fc', '#ffffff', '#bae6fd']
+                            });
+                        }
+                    }
+                }, speed);
+            });
+
+        });
+    </script>
+</body>
+</html>
